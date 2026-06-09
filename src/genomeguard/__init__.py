@@ -17,7 +17,7 @@ from genomeguard.verifier import verify_and_apply
 from genomeguard.utils import load_config, read_changed_file, resolve_genome_db
 from genomeguard.watcher import query_graph_delta
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 
 __all__ = [
     "apply_enforce_write",
