@@ -12,6 +12,8 @@ license = { text = "MIT" }
 dependencies = [
     "openai>=1.0.0",
     "codegenome",
+    "cryptography>=42.0.0",
+    "textual>=0.80.0",
 ]
 
 [project.optional-dependencies]
@@ -33,3 +35,6 @@ include = [
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src"]
+markers = [
+    "integration: live network tests requiring OPENAI_API_KEY (excluded from default CI)",
+]

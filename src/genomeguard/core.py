@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import sys
+import threading
 import time
 from pathlib import Path
 from typing import Any
@@ -93,16 +94,11 @@ def process_single_change(
     full_graph = export_graph_context(workspace)
     graph_context = compact_graph_context(full_graph, normalized_path)
 
-    if not mock_critic:
-        logger.warning(
-            "Real OpenAI critic is not configured yet (Session 7); using mock fixtures."
-        )
-
     critic_result = evaluate_decay_metrics(
         changed_code,
         graph_context,
         config,
-        llm_client=None,
+        mock=mock_critic,
     )
     outcome = verify_and_apply(
         critic_result,
@@ -121,6 +117,7 @@ def run_daemon(
     *,
     mock_critic: bool = True,
     once: bool = False,
+    stop_event: threading.Event | None = None,
 ) -> int:
     """Poll ``.genome/watcher.db`` and run the agent pipeline on graph deltas."""
     configure_logging()
@@ -164,6 +161,11 @@ def run_daemon(
         if once:
             break
 
-        time.sleep(poll_interval)
+        if stop_event is not None:
+            if stop_event.wait(poll_interval):
+                logger.info("GenomeGuard daemon stopped.")
+                break
+        else:
+            time.sleep(poll_interval)
 
     return 0

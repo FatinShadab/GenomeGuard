@@ -40,7 +40,7 @@ Options:
 | `--config PATH` | Path to `guard_config.json` (default: `<workspace>/guard_config.json`) |
 | `--mode patch\|enforce` | Override config mode |
 | `--once` | Single poll cycle then exit (debug / CI) |
-| `--mock-critic` / `--no-mock-critic` | Use offline mock LLM fixtures (default: enabled) |
+| `--mock-critic` / `--no-mock-critic` | Offline mock LLM fixtures (default: off when `OPENAI_API_KEY` is set, else on with warning) |
 
 Legacy smoke test:
 
@@ -67,9 +67,16 @@ See [AGENTS.md](AGENTS.md) for the four agent personas and [skills.md](skills.md
 
 ## Tests
 
-All tests run fully offline with mocked LLM responses — no `OPENAI_API_KEY` required.
+Default CI runs exclude live network calls — no `OPENAI_API_KEY` required:
 
 ```bash
+pytest -v -m "not integration"
+```
+
+Run the full suite including live OpenAI integration (requires a key):
+
+```bash
+export OPENAI_API_KEY=sk-...   # Windows: set OPENAI_API_KEY=sk-...
 pytest -v
 ```
 
@@ -81,10 +88,56 @@ Test modules:
 - `tests/test_verifier.py` — compilation gate
 - `tests/test_orchestrator.py` — daemon handoffs and loop-drain guard
 - `tests/test_pipeline_integration.py` — end-to-end mocked pipeline
+- `tests/test_openai_integration.py` — live OpenAI critic (`@pytest.mark.integration`)
 
-## OpenAI integration
+## OpenAI Setup
 
-OpenAI API wiring is enabled in the final setup step (Session 7). Until then, `--mock-critic` uses local fixtures under `tests/fixtures/`.
+Live Critic analysis requires an OpenAI API key. **Never commit real keys** — use environment variables or a local `.env` file (gitignored).
+
+1. Copy the template and set your key locally:
+
+```bash
+cp .env.example .env
+# edit .env — do not commit this file
+```
+
+2. Export the variable in your shell (alternative to `.env`):
+
+```bash
+export OPENAI_API_KEY=sk-...   # Windows PowerShell: $env:OPENAI_API_KEY="sk-..."
+```
+
+3. Optional model override in `guard_config.json`:
+
+```json
+{
+  "openai_model": "gpt-4o"
+}
+```
+
+4. Run with live API (default when the key is present):
+
+```bash
+genome-guard --workspace . --no-mock-critic
+```
+
+Force offline mock fixtures even with a key (cheap local runs):
+
+```bash
+genome-guard --workspace . --mock-critic
+```
+
+**Cost note:** Only changed files detected via `.genome/watcher.db` trigger OpenAI calls — not the entire codebase on every poll.
+
+### Manual E2E checklist
+
+- [ ] `pip install -e ".[dev]"` in the GenomeGuard repo
+- [ ] Create a sample project with an intentional architecture violation
+- [ ] `cd sample && codegenome analyze . && codegenome evolve .` (background terminal)
+- [ ] `export OPENAI_API_KEY=...` (or load from `.env`)
+- [ ] `genome-guard --workspace . --mode patch`
+- [ ] Edit the sample file, save, confirm `.genome/patches/*.patch` generated
+- [ ] Repeat with `--mode enforce` on a throwaway branch only
 
 ## License
 

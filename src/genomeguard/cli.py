@@ -5,12 +5,21 @@ from __future__ import annotations
 import argparse
 import json
 import logging
+import sys
 import time
 from pathlib import Path
 
 from genomeguard.graph import compact_graph_context, export_graph_context
 from genomeguard.core import configure_logging, run_daemon
-from genomeguard.utils import load_config, read_changed_file, resolve_genome_db
+from genomeguard.utils import (
+    OpenAIConfigurationError,
+    create_openai_client,
+    ensure_openai_api_key_in_env,
+    has_openai_api_key,
+    load_config,
+    read_changed_file,
+    resolve_genome_db,
+)
 from genomeguard.watcher import query_graph_delta
 
 logger = logging.getLogger(__name__)
@@ -79,8 +88,11 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--mock-critic",
         action=argparse.BooleanOptionalAction,
-        default=True,
-        help="Use mock LLM critic fixtures (default: enabled until Session 7)",
+        default=not has_openai_api_key(),
+        help=(
+            "Use offline mock LLM fixtures "
+            "(default: disabled when OPENAI_API_KEY is set, otherwise enabled)"
+        ),
     )
     parser.add_argument(
         "legacy_command",
@@ -101,6 +113,17 @@ def main(argv: list[str] | None = None) -> None:
         return
 
     workspace = Path(args.workspace).resolve()
+    if args.legacy_command == "tui":
+        config_path = (
+            Path(args.config).resolve()
+            if args.config
+            else workspace / "guard_config.json"
+        )
+        from genomeguard.tui import run_tui
+
+        run_tui(workspace, config_path)
+        return
+
     config_path = (
         Path(args.config).resolve()
         if args.config
@@ -109,6 +132,28 @@ def main(argv: list[str] | None = None) -> None:
     config = load_config(str(config_path))
     if args.mode is not None:
         config["mode"] = args.mode
+
+    ensure_openai_api_key_in_env()
+
+    if not has_openai_api_key():
+        if args.mock_critic:
+            print(
+                "WARNING: OPENAI_API_KEY not set; using mock critic fixtures "
+                "(--mock-critic). Set the key for live OpenAI analysis.",
+                file=sys.stderr,
+            )
+        else:
+            try:
+                create_openai_client()
+            except OpenAIConfigurationError as exc:
+                print(str(exc), file=sys.stderr)
+            raise SystemExit(1)
+    elif not args.mock_critic:
+        try:
+            create_openai_client()
+        except OpenAIConfigurationError as exc:
+            print(str(exc), file=sys.stderr)
+            raise SystemExit(1)
 
     exit_code = run_daemon(
         workspace,

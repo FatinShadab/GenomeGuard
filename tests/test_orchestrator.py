@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import threading
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -205,3 +206,24 @@ def test_advance_last_seen_drains_self_induced_delta(
 
     assert exit_code == 0
     assert mock_delta.call_count >= 2
+
+
+@patch("genomeguard.core.query_graph_delta", return_value=None)
+def test_run_daemon_stops_on_event(
+    mock_delta: MagicMock,
+    workspace: Path,
+) -> None:
+    config = json.loads((workspace / "guard_config.json").read_text(encoding="utf-8"))
+    config["poll_interval_seconds"] = 0.01
+    stop_event = threading.Event()
+    stop_event.set()
+
+    exit_code = run_daemon(
+        workspace,
+        config,
+        mock_critic=True,
+        stop_event=stop_event,
+    )
+
+    assert exit_code == 0
+    assert stop_event.is_set()

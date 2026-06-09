@@ -8,7 +8,7 @@ import sys
 from pathlib import Path
 from typing import Any, Callable
 
-from genomeguard.utils import load_config
+from genomeguard.utils import create_openai_client, load_config
 
 MOCK_CRITIC_FIXTURE = "critic_decay_detected.json"
 MOCK_CRITIC_HEALTHY_FIXTURE = "critic_healthy.json"
@@ -148,21 +148,60 @@ def _load_mock_critic_response(changed_code: str) -> str:
         return json.dumps(inline)
 
 
+def _invoke_openai_chat(
+    client: Any,
+    messages: list[dict[str, str]],
+    config: dict,
+) -> str:
+    """Call OpenAI chat completions and return assistant text content."""
+    model = config.get("openai_model", "gpt-4o")
+    try:
+        response = client.chat.completions.create(
+            model=model,
+            messages=messages,
+            temperature=0,
+        )
+    except Exception as exc:
+        raise RuntimeError(
+            "OpenAI API request failed. Verify OPENAI_API_KEY, network access, "
+            f"and that model {model!r} is available for your account. "
+            f"Details: {type(exc).__name__}: {exc}"
+        ) from exc
+
+    try:
+        content = response.choices[0].message.content
+    except (AttributeError, IndexError, TypeError) as exc:
+        raise RuntimeError(
+            "OpenAI API returned an unexpected response shape; no assistant content found."
+        ) from exc
+
+    if not content or not str(content).strip():
+        raise RuntimeError("OpenAI API returned empty assistant content.")
+
+    return str(content)
+
+
 def evaluate_decay_metrics(
     changed_code: str,
     graph_context: dict,
     config: dict,
     *,
-    llm_client: Callable[[list[dict[str, str]]], str] | None = None,
+    llm_client: Callable[[list[dict[str, str]]], str] | Any | None = None,
+    mock: bool = True,
 ) -> dict[str, Any]:
-    """Run Critic analysis; uses mock fixtures when ``llm_client`` is None."""
+    """Run Critic analysis; uses mock fixtures when ``mock=True``."""
     rules = config.get("rules", [])
     messages = build_critic_prompt(changed_code, graph_context, rules)
 
-    if llm_client is None:
+    if mock:
         raw = _load_mock_critic_response(changed_code)
-    else:
+    elif llm_client is not None and hasattr(llm_client, "chat"):
+        raw = _invoke_openai_chat(llm_client, messages, config)
+    elif llm_client is not None:
         raw = llm_client(messages)
+    else:
+        client = create_openai_client()
+        raw = _invoke_openai_chat(client, messages, config)
 
     return parse_critic_response(raw)
 

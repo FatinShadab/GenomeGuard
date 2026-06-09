@@ -209,6 +209,9 @@ tempCodeRunnerFile.py
 # PyPI configuration file
 .pypirc
 
+# GenomeGuard encrypted local credentials (never commit)
+**/.secrets/
+
 # Marimo
 marimo/_static/
 marimo/_lsp/
