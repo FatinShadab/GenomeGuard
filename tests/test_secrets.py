@@ -13,7 +13,8 @@ from genomeguard.utils import ensure_openai_api_key_in_env, has_openai_api_key, 
 
 @pytest.fixture
 def secrets_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
-    target = tmp_path / ".secrets"
+    target = tmp_path / ".genomeguard"
+    monkeypatch.setattr(secrets, "user_credentials_dir", lambda: target)
     monkeypatch.setattr(secrets, "package_secrets_dir", lambda: target)
     return target
 

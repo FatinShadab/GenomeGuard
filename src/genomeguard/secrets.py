@@ -1,4 +1,4 @@
-"""Encrypted local storage for OpenAI credentials in the package source tree."""
+"""Encrypted local storage for OpenAI credentials outside the project tree."""
 
 from __future__ import annotations
 
@@ -10,7 +10,7 @@ import platform
 from pathlib import Path
 from typing import Any
 
-SECRETS_DIR_NAME = ".secrets"
+CONFIG_DIR_NAME = ".genomeguard"
 CREDENTIALS_FILE = "credentials.json"
 FERNET_VERSION = "v1"
 
@@ -19,13 +19,18 @@ class SecretsError(RuntimeError):
     """Raised when encrypted credential storage cannot be read or written."""
 
 
+def user_credentials_dir() -> Path:
+    """Return the per-user GenomeGuard config directory under the home folder."""
+    return Path.home() / CONFIG_DIR_NAME
+
+
 def package_secrets_dir() -> Path:
-    """Return the secrets directory beside the installed genomeguard package."""
-    return Path(__file__).resolve().parent / SECRETS_DIR_NAME
+    """Backward-compatible alias for :func:`user_credentials_dir`."""
+    return user_credentials_dir()
 
 
 def credentials_path() -> Path:
-    return package_secrets_dir() / CREDENTIALS_FILE
+    return user_credentials_dir() / CREDENTIALS_FILE
 
 
 def _derive_fernet_key() -> bytes:
@@ -67,7 +72,7 @@ def _read_store() -> dict[str, Any]:
 
 
 def _write_store(payload: dict[str, Any]) -> None:
-    secrets_dir = package_secrets_dir()
+    secrets_dir = user_credentials_dir()
     secrets_dir.mkdir(parents=True, exist_ok=True)
     path = credentials_path()
     with path.open("w", encoding="utf-8") as handle:
@@ -97,7 +102,7 @@ def load_openai_api_key() -> str | None:
 
 
 def save_openai_api_key(api_key: str) -> None:
-    """Encrypt and persist the OpenAI API key beside the package source."""
+    """Encrypt and persist the OpenAI API key in the user config directory."""
     cleaned = api_key.strip()
     if not cleaned:
         raise SecretsError("API key cannot be empty.")

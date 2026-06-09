@@ -209,8 +209,15 @@ tempCodeRunnerFile.py
 # PyPI configuration file
 .pypirc
 
-# GenomeGuard encrypted local credentials (never commit)
+# GenomeGuard / CodeGenome local runtime artifacts (never commit)
+.genome/
+.genomeguard/
+.temp_genome_check.py
 **/.secrets/
+
+# Local config overrides (copy guard_config.example.json to guard_config.json)
+guard_config.json
+src/guard_config.json
 
 # Marimo
 marimo/_static/

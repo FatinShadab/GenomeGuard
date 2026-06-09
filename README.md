@@ -2,6 +2,8 @@
 
 **AI-native architecture immune system for Python codebases.** GenomeGuard watches a live `codegenome` graph, asks OpenAI to reason over architectural decay, verifies the proposed repair, and produces a safe patch or enforced rewrite before the design damage spreads.
 
+**Author:** Md. Fatin Shadab Turja
+
 ![GenomeGuard CLI screenshot](docs/media/cli-help.png)
 
 ## The Problem
@@ -122,6 +124,14 @@ codegenome evolve .
 
 ### Install
 
+From PyPI:
+
+```bash
+pip install genome-guard
+```
+
+For local development:
+
 ```bash
 python -m venv .venv
 .venv\Scripts\activate
@@ -137,6 +147,12 @@ pip install -e ".[dev]"
 ```
 
 ### Configure
+
+Copy the example config into your project root:
+
+```bash
+cp guard_config.example.json guard_config.json
+```
 
 `guard_config.json` controls polling, rules, output mode, temp file, and model:
 
@@ -167,6 +183,8 @@ PowerShell:
 ```powershell
 $env:OPENAI_API_KEY = "sk-..."
 ```
+
+Or save an encrypted key via the TUI (`genome-guard tui` → **API Key** tab). Encrypted credentials are stored under `~/.genomeguard/` and are never written into the project tree or PyPI package.
 
 ### Run
 
@@ -231,8 +249,21 @@ Command:
 python -m pytest -q -m "not integration"
 ```
 
-Live OpenAI tests are marked `integration` and intentionally skipped unless `OPENAI_API_KEY` is set.
+Live OpenAI tests are marked `integration` and intentionally skipped unless OpenAI credentials are available (environment variable or TUI encrypted storage).
+
+## Publishing
+
+Build and upload to PyPI:
+
+```bash
+python -m pip install --upgrade build twine
+python -m build
+twine check dist/*
+twine upload dist/*
+```
+
+Local runtime artifacts (`.genome/`, `.genomeguard/`, encrypted credentials, patches) are gitignored and excluded from the sdist — they are created at runtime in the user's project or home directory.
 
 ## License
 
-MIT. See `LICENSE`.
+MIT. See `LICENSE`. Copyright (c) 2026 Md. Fatin Shadab Turja.

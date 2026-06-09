@@ -13,7 +13,7 @@ from genomeguard.secrets import (
     has_stored_openai_api_key,
     load_openai_api_key,
     mask_api_key,
-    package_secrets_dir,
+    user_credentials_dir,
     save_openai_api_key,
 )
 from genomeguard.utils import (
@@ -101,7 +101,7 @@ def build_overview_text(
         f"[bold]Workspace:[/]       {workspace}\n"
         f"[bold]Config:[/]          {config_path}\n"
         f"[bold]Watcher DB:[/]      {watcher_status}\n"
-        f"[bold]Secrets Dir:[/]     {package_secrets_dir()}\n\n"
+        f"[bold]Secrets Dir:[/]     {user_credentials_dir()}\n\n"
         f"[bold cyan]ENGINE CONFIGURATION[/]\n"
         f"─────────────────────────────────────────\n"
         f"[bold]Mode:[/]            [bold green]{config.get('mode', 'patch').upper()}[/]\n"

@@ -8,7 +8,31 @@ version = "0.1.0"
 description = "Codegenome immune system — real-time architecture guardrail"
 readme = "README.md"
 requires-python = ">=3.12"
-license = { text = "MIT" }
+license = "MIT"
+authors = [
+    { name = "Md. Fatin Shadab Turja" },
+]
+keywords = [
+    "architecture",
+    "codegenome",
+    "openai",
+    "refactoring",
+    "guardrail",
+    "python",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Software Development :: Quality Assurance",
+    "Topic :: Software Development :: Code Generators",
+]
 dependencies = [
     "openai>=1.0.0",
     "codegenome",
@@ -30,11 +54,25 @@ packages = ["src/genomeguard"]
 [tool.hatch.build.targets.sdist]
 include = [
     "/src/genomeguard",
+    "/README.md",
+    "/LICENSE",
+    "/guard_config.example.json",
+    "/.env.example",
+]
+exclude = [
+    "/tests",
+    "/docs",
+    "/prompts",
+    "/.cursor",
+    "/.genome",
+    "/src/.genome",
+    "/.venv",
+    "/.pytest_cache",
 ]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src"]
 markers = [
-    "integration: live network tests requiring OPENAI_API_KEY (excluded from default CI)",
+    "integration: live network tests requiring OpenAI credentials (excluded from default CI)",
 ]
