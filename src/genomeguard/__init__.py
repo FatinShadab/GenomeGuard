@@ -6,14 +6,14 @@ from genomeguard.critic import (
     parse_critic_response,
 )
 from genomeguard.graph import compact_graph_context, export_graph_context
+from genomeguard.core import configure_logging, process_single_change, run_daemon
 from genomeguard.surgeon import (
     apply_enforce_write,
-    generate_unified_diff,
     run_surgeon,
     write_patch_file,
 )
-from genomeguard.verifier import execute_compilation_check, verify_and_apply
-from genomeguard.orchestrator import configure_logging, process_single_change, run_daemon
+from genomeguard.utils import execute_compilation_check, generate_unified_diff
+from genomeguard.verifier import verify_and_apply
 from genomeguard.utils import load_config, read_changed_file, resolve_genome_db
 from genomeguard.watcher import query_graph_delta
 

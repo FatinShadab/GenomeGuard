@@ -94,7 +94,7 @@ def query_graph_delta(db_path: Path, last_seen_mtime: float | None) -> dict | No
 
     changed_path, timestamp = resource
     return {
-        "changed_path": changed_path,
+        "changed_path": normalize_path(changed_path),
         "timestamp": timestamp,
         "db_mtime": db_mtime,
     }

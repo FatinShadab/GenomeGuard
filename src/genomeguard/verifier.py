@@ -2,43 +2,13 @@
 
 from __future__ import annotations
 
-import subprocess
-import sys
 from pathlib import Path
 from typing import Any
 
 from genomeguard.surgeon import run_surgeon
-from genomeguard.utils import copy_process_env
+from genomeguard.utils import execute_compilation_check
 
-
-def execute_compilation_check(
-    code: str,
-    temp_filename: str,
-    workspace_root: Path,
-) -> tuple[bool, str]:
-    """Write ``code`` to a temp shadow file and run ``py_compile`` against it.
-
-    The shadow file is always removed in a ``finally`` block, even when
-    compilation fails or raises.
-    """
-    temp_path = workspace_root / temp_filename
-    try:
-        temp_path.write_text(code, encoding="utf-8")
-        result = subprocess.run(
-            [sys.executable, "-m", "py_compile", str(temp_path)],
-            capture_output=True,
-            text=True,
-            env=copy_process_env(),
-        )
-        if result.returncode == 0:
-            return True, ""
-        error_message = (result.stderr or result.stdout or "").strip()
-        return False, error_message or "py_compile failed with no error output"
-    finally:
-        try:
-            temp_path.unlink(missing_ok=True)
-        except OSError:
-            pass
+__all__ = ["execute_compilation_check", "run_verifier_smoke_test", "verify_and_apply"]
 
 
 def verify_and_apply(

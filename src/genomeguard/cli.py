@@ -9,7 +9,7 @@ import time
 from pathlib import Path
 
 from genomeguard.graph import compact_graph_context, export_graph_context
-from genomeguard.orchestrator import configure_logging, run_daemon
+from genomeguard.core import configure_logging, run_daemon
 from genomeguard.utils import load_config, read_changed_file, resolve_genome_db
 from genomeguard.watcher import query_graph_delta
 

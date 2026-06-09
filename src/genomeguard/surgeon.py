@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import difflib
 import json
 import sys
 import time
@@ -10,7 +9,15 @@ from pathlib import Path
 from typing import Any
 
 from genomeguard.critic import MOCK_CRITIC_FIXTURE
-from genomeguard.utils import load_config
+from genomeguard.utils import generate_unified_diff, load_config
+
+__all__ = [
+    "apply_enforce_write",
+    "generate_unified_diff",
+    "run_surgeon",
+    "run_surgeon_smoke_test",
+    "write_patch_file",
+]
 
 _SOC_VIOLATION_SAMPLE = """\
 # SOC VIOLATION: business logic and DB access inside route handler
@@ -21,20 +28,6 @@ def handle_request(request):
     users = query_users()
     return {"users": users}
 """
-
-
-def generate_unified_diff(original: str, refactored: str, filepath: str) -> str:
-    """Build a unified diff between original and refactored source."""
-    relative_path = Path(filepath).as_posix()
-    original_lines = original.splitlines(keepends=True)
-    refactored_lines = refactored.splitlines(keepends=True)
-    diff_lines = difflib.unified_diff(
-        original_lines,
-        refactored_lines,
-        fromfile=relative_path,
-        tofile=relative_path,
-    )
-    return "".join(diff_lines)
 
 
 def write_patch_file(patch_text: str, target_path: str, patches_dir: str) -> Path:

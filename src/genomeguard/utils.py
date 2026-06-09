@@ -1,11 +1,13 @@
-"""Shared utilities: configuration, paths, filesystem, and subprocess helpers."""
+"""Shared utilities: configuration, paths, filesystem, subprocess, and diff helpers."""
 
 from __future__ import annotations
 
+import difflib
 import json
 import os
 import shutil
 import sqlite3
+import subprocess
 import sys
 from pathlib import Path
 from typing import Any
@@ -84,3 +86,47 @@ def read_changed_file(changed_path: str) -> str:
     if not path.is_file():
         raise FileNotFoundError(f"Changed file not found: {normalize_path(changed_path)}")
     return path.read_text(encoding="utf-8")
+
+
+def generate_unified_diff(original: str, refactored: str, filepath: str) -> str:
+    """Build a unified diff between original and refactored source."""
+    relative_path = Path(filepath).as_posix()
+    original_lines = original.splitlines(keepends=True)
+    refactored_lines = refactored.splitlines(keepends=True)
+    diff_lines = difflib.unified_diff(
+        original_lines,
+        refactored_lines,
+        fromfile=relative_path,
+        tofile=relative_path,
+    )
+    return "".join(diff_lines)
+
+
+def execute_compilation_check(
+    code: str,
+    temp_filename: str,
+    workspace_root: Path,
+) -> tuple[bool, str]:
+    """Write ``code`` to a temp shadow file and run ``py_compile`` against it.
+
+    The shadow file is always removed in a ``finally`` block, even when
+    compilation fails or raises.
+    """
+    temp_path = workspace_root / temp_filename
+    try:
+        temp_path.write_text(code, encoding="utf-8")
+        result = subprocess.run(
+            [sys.executable, "-m", "py_compile", str(temp_path)],
+            capture_output=True,
+            text=True,
+            env=copy_process_env(),
+        )
+        if result.returncode == 0:
+            return True, ""
+        error_message = (result.stderr or result.stdout or "").strip()
+        return False, error_message or "py_compile failed with no error output"
+    finally:
+        try:
+            temp_path.unlink(missing_ok=True)
+        except OSError:
+            pass

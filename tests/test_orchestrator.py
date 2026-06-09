@@ -8,7 +8,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from genomeguard.orchestrator import (
+from genomeguard.core import (
     WATCHER_DB_MISSING_MSG,
     process_single_change,
     run_daemon,
@@ -70,9 +70,9 @@ def _write_target(workspace: Path, rel_path: str = "sample.py") -> str:
     return str(target.resolve())
 
 
-@patch("genomeguard.orchestrator.export_graph_context", return_value=MINIMAL_GRAPH)
-@patch("genomeguard.orchestrator.evaluate_decay_metrics", return_value=HEALTHY_CRITIC)
-@patch("genomeguard.orchestrator.verify_and_apply")
+@patch("genomeguard.core.export_graph_context", return_value=MINIMAL_GRAPH)
+@patch("genomeguard.core.evaluate_decay_metrics", return_value=HEALTHY_CRITIC)
+@patch("genomeguard.core.verify_and_apply")
 def test_healthy_path_skips_surgeon(
     mock_verify: MagicMock,
     mock_evaluate: MagicMock,
@@ -97,9 +97,9 @@ def test_healthy_path_skips_surgeon(
     )
 
 
-@patch("genomeguard.orchestrator.export_graph_context", return_value=MINIMAL_GRAPH)
-@patch("genomeguard.orchestrator.evaluate_decay_metrics", return_value=DECAY_CRITIC)
-@patch("genomeguard.orchestrator.verify_and_apply")
+@patch("genomeguard.core.export_graph_context", return_value=MINIMAL_GRAPH)
+@patch("genomeguard.core.evaluate_decay_metrics", return_value=DECAY_CRITIC)
+@patch("genomeguard.core.verify_and_apply")
 def test_decay_path_creates_patch(
     mock_verify: MagicMock,
     mock_evaluate: MagicMock,
@@ -123,8 +123,8 @@ def test_decay_path_creates_patch(
     mock_verify.assert_called_once()
 
 
-@patch("genomeguard.orchestrator.time.sleep")
-@patch("genomeguard.orchestrator.query_graph_delta")
+@patch("genomeguard.core.time.sleep")
+@patch("genomeguard.core.query_graph_delta")
 def test_run_daemon_once_with_delta(
     mock_delta: MagicMock,
     mock_sleep: MagicMock,
@@ -139,7 +139,7 @@ def test_run_daemon_once_with_delta(
     ]
 
     with patch(
-        "genomeguard.orchestrator.process_single_change",
+        "genomeguard.core.process_single_change",
         return_value={"status": "healthy"},
     ) as mock_process:
         exit_code = run_daemon(workspace, config, mock_critic=True, once=True)
@@ -151,8 +151,8 @@ def test_run_daemon_once_with_delta(
     mock_sleep.assert_not_called()
 
 
-@patch("genomeguard.orchestrator.time.sleep")
-@patch("genomeguard.orchestrator.query_graph_delta", return_value=None)
+@patch("genomeguard.core.time.sleep")
+@patch("genomeguard.core.query_graph_delta", return_value=None)
 def test_run_daemon_once_no_delta(
     mock_delta: MagicMock,
     mock_sleep: MagicMock,
@@ -160,7 +160,7 @@ def test_run_daemon_once_no_delta(
 ) -> None:
     config = json.loads((workspace / "guard_config.json").read_text(encoding="utf-8"))
 
-    with patch("genomeguard.orchestrator.process_single_change") as mock_process:
+    with patch("genomeguard.core.process_single_change") as mock_process:
         exit_code = run_daemon(workspace, config, mock_critic=True, once=True)
 
     assert exit_code == 0
@@ -180,7 +180,7 @@ def test_run_daemon_missing_watcher_db(tmp_path: Path, capsys: pytest.CaptureFix
     assert WATCHER_DB_MISSING_MSG in captured.err
 
 
-@patch("genomeguard.orchestrator.query_graph_delta")
+@patch("genomeguard.core.query_graph_delta")
 def test_advance_last_seen_drains_self_induced_delta(
     mock_delta: MagicMock,
     workspace: Path,
@@ -198,7 +198,7 @@ def test_advance_last_seen_drains_self_induced_delta(
     ]
 
     with patch(
-        "genomeguard.orchestrator.process_single_change",
+        "genomeguard.core.process_single_change",
         return_value={"status": "applied", "action": "enforce", "target_path": changed_path},
     ):
         exit_code = run_daemon(workspace, config, mock_critic=True, once=True)

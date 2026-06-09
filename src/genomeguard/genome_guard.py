@@ -23,21 +23,25 @@ from genomeguard.critic import (
     run_critic_smoke_test,
 )
 from genomeguard.graph import compact_graph_context, export_graph_context
-from genomeguard.orchestrator import (
+from genomeguard.core import (
     configure_logging,
     process_single_change,
     run_daemon,
 )
 from genomeguard.surgeon import (
     apply_enforce_write,
-    generate_unified_diff,
     run_surgeon,
     run_surgeon_smoke_test,
     write_patch_file,
 )
-from genomeguard.utils import load_config, read_changed_file, resolve_genome_db
-from genomeguard.verifier import (
+from genomeguard.utils import (
     execute_compilation_check,
+    generate_unified_diff,
+    load_config,
+    read_changed_file,
+    resolve_genome_db,
+)
+from genomeguard.verifier import (
     run_verifier_smoke_test,
     verify_and_apply,
 )
