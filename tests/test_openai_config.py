@@ -10,6 +10,14 @@ from genomeguard.critic import evaluate_decay_metrics
 from genomeguard.utils import OpenAIConfigurationError, create_openai_client, has_openai_api_key
 
 
+@pytest.fixture(autouse=True)
+def mock_no_stored_key(monkeypatch: pytest.MonkeyPatch) -> None:
+    from genomeguard import secrets
+
+    monkeypatch.setattr(secrets, "has_stored_openai_api_key", lambda: False)
+    monkeypatch.setattr(secrets, "load_openai_api_key", lambda: None)
+
+
 def test_has_openai_api_key_false_when_unset(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.delenv("OPENAI_API_KEY", raising=False)
     assert has_openai_api_key() is False

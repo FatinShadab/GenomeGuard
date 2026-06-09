@@ -36,6 +36,17 @@ DEFAULT_OPENAI_MODELS = (
     "o1-mini",
 )
 
+GENOMEGUARD_ASCII_BANNER = r"""[bold cyan]      A ═ T        ____                                 ____                      _[/]
+[bold cyan]     G ─── C      / ___| ___ _ __   ___  _ __ ___   ___ / ___|_   _  __ _ _ __   __| |[/]
+[bold cyan]    C ───── G    | |  _ / _ \ '_ \ / _ \| '_ ` _ \ / _ \ |  _| | | |/ _` | '___|/ _` |[/]
+[bold cyan]     T ─── A     | |_| |  __/ | | | (_) | | | | | |  __/ |_| | |_| | (_| | |   | (_| |[/]
+[bold cyan]      G ═ C       \____|\___|_| |_|\___/|_| |_| |_|\___|\____|\__,_|\__,_|_|    \__,_|[/]
+[bold cyan]      C ═ G[/]
+[bold cyan]     A ─── T                  REAL-TIME IMMUNE ARCHITECTURE SYSTEM[/]
+[bold cyan]    G ───── C                 [/][dim]Shielding code community rules & structural integrity[/]
+[bold cyan]     C ─── G[/]
+[bold cyan]      T ═ A[/]"""
+
 
 def _list_patch_files(workspace: Path, config: dict[str, Any]) -> list[Path]:
     patches_dir = workspace / config.get("patches_dir", ".genome/patches")
@@ -54,20 +65,20 @@ def _api_key_status() -> str:
 
     env_key = os.environ.get(OPENAI_API_KEY_ENV, "").strip()
     if env_key:
-        return f"configured — {mask_api_key(env_key)}"
+        return f"[bold green]Configured (Environment)[/] — {mask_api_key(env_key)}"
     if has_stored_openai_api_key():
         try:
             stored = load_openai_api_key()
         except Exception:
             stored = None
         if stored:
-            return f"stored — {mask_api_key(stored)}"
-        return "stored (decrypt failed)"
-    return "not configured"
+            return f"[bold green]Configured (Encrypted Storage)[/] — {mask_api_key(stored)}"
+        return "[bold red]Stored (Decrypt Failed)[/]"
+    return "[bold yellow]Not Configured[/]"
 
 
 def _daemon_status_line(running: bool) -> str:
-    return "[green]running[/]" if running else "[dim]stopped[/]"
+    return "[bold green]● Running[/]" if running else "[bold red]■ Stopped[/]"
 
 
 def build_overview_text(
@@ -78,24 +89,29 @@ def build_overview_text(
     daemon_running: bool = False,
 ) -> str:
     db_path = resolve_genome_db(workspace)
-    watcher_status = "ready" if db_path.is_file() else "missing — run codegenome analyze && evolve"
+    watcher_status = "[bold green]✔ Ready[/]" if db_path.is_file() else "[bold red]✖ Missing[/] (run codegenome analyze && evolve)"
     rules = config.get("rules", [])
-    rules_preview = "\n".join(f"  • {rule}" for rule in rules[:4])
-    if len(rules) > 4:
-        rules_preview += f"\n  • … and {len(rules) - 4} more"
+    rules_preview = "\n".join(f"  [cyan]•[/] {rule}" for rule in rules[:6])
+    if len(rules) > 6:
+        rules_preview += f"\n  [cyan]•[/] … and {len(rules) - 6} more"
 
     return (
-        f"[bold]Workspace[/]       {workspace}\n"
-        f"[bold]Config[/]          {config_path}\n"
-        f"[bold]Mode[/]            {config.get('mode', 'patch')}\n"
-        f"[bold]Poll interval[/]   {config.get('poll_interval_seconds', 2)}s\n"
-        f"[bold]OpenAI model[/]    {config.get('openai_model', 'gpt-4o')}\n"
-        f"[bold]Daemon[/]          {_daemon_status_line(daemon_running)}\n"
-        f"[bold]API key[/]         {_api_key_status()}\n"
-        f"[bold]Watcher DB[/]      {watcher_status}\n"
-        f"[bold]Patches dir[/]     {workspace / config.get('patches_dir', '.genome/patches')}\n"
-        f"[bold]Secrets dir[/]     {package_secrets_dir()}\n"
-        f"[bold]Rules ({len(rules)})[/]\n{rules_preview or '  (none)'}"
+        f"[bold cyan]SYSTEM PROFILE[/]\n"
+        f"─────────────────────────────────────────\n"
+        f"[bold]Workspace:[/]       {workspace}\n"
+        f"[bold]Config:[/]          {config_path}\n"
+        f"[bold]Watcher DB:[/]      {watcher_status}\n"
+        f"[bold]Secrets Dir:[/]     {package_secrets_dir()}\n\n"
+        f"[bold cyan]ENGINE CONFIGURATION[/]\n"
+        f"─────────────────────────────────────────\n"
+        f"[bold]Mode:[/]            [bold green]{config.get('mode', 'patch').upper()}[/]\n"
+        f"[bold]Poll Interval:[/]   {config.get('poll_interval_seconds', 2)}s\n"
+        f"[bold]OpenAI Model:[/]    [bold yellow]{config.get('openai_model', 'gpt-4o')}[/]\n"
+        f"[bold]API Key:[/]         {_api_key_status()}\n"
+        f"[bold]Daemon Status:[/]   {_daemon_status_line(daemon_running)}\n\n"
+        f"[bold cyan]ACTIVE LAWS & RULES ({len(rules)})[/]\n"
+        f"─────────────────────────────────────────\n"
+        f"{rules_preview or '  (none)'}"
     )
 
 
@@ -103,16 +119,25 @@ def build_patches_text(workspace: Path, config: dict[str, Any]) -> str:
     patches = _list_patch_files(workspace, config)
     if not patches:
         patches_dir = workspace / config.get("patches_dir", ".genome/patches")
-        return f"[dim]No patch files in {patches_dir}[/]"
+        return (
+            f"[bold cyan]PATCHES REPOSITORY[/]\n"
+            f"─────────────────────────────────────────\n\n"
+            f"[dim]No patch files found in {patches_dir}[/]\n"
+            f"[dim]The Surgeon agent will write patches here when architectural decay is detected.[/]"
+        )
 
-    lines = []
+    lines = [
+        f"[bold cyan]PATCHES REPOSITORY ({len(patches)})[/]\n"
+        f"─────────────────────────────────────────"
+    ]
     for patch_path in patches[:20]:
         size_kb = patch_path.stat().st_size / 1024
         lines.append(
-            f"[cyan]{patch_path.name}[/]  [dim]{_format_mtime(patch_path)}  {size_kb:.1f} KB[/]"
+            f" [bold green]✔[/] [bold]{patch_path.name}[/]\n"
+            f"   [dim]Modified: {_format_mtime(patch_path)}   Size: {size_kb:.1f} KB[/]"
         )
     if len(patches) > 20:
-        lines.append(f"[dim]… and {len(patches) - 20} more[/]")
+        lines.append(f"\n [dim]… and {len(patches) - 20} more patches available[/]")
     return "\n".join(lines)
 
 
@@ -175,6 +200,8 @@ def run_tui(workspace: Path, config_path: Path) -> None:
             RichLog,
             Static,
             Switch,
+            TabbedContent,
+            TabPane,
         )
     except ImportError as exc:
         raise SystemExit(
@@ -187,52 +214,182 @@ def run_tui(workspace: Path, config_path: Path) -> None:
 
     class GenomeGuardApp(App):
         TITLE = "GenomeGuard"
-        SUB_TITLE = str(workspace)
+        SUB_TITLE = f"Workspace: {workspace}"
         CSS = """
         Screen {
-            layout: vertical;
+            background: $background;
+            color: $text;
         }
-        #content {
+
+        Header {
+            background: $accent;
+            color: $text;
+            text-style: bold;
+        }
+
+        Footer {
+            background: $surface;
+            color: $text;
+        }
+
+        TabbedContent {
             height: 1fr;
+        }
+
+        TabPane {
             padding: 1 2;
+            background: $background;
         }
-        #overview-panel, #patches-panel {
-            width: 1fr;
-            height: 1fr;
-            border: solid $accent;
-            padding: 1 2;
-        }
-        #settings-panel {
-            height: 1fr;
-            padding: 1 2;
-        }
-        #api-view, #model-view, #daemon-view {
-            display: none;
-        }
-        #daemon-log {
-            height: 1fr;
-            border: solid $accent;
-            margin-top: 1;
-        }
-        #daemon-controls {
+
+        #dashboard-banner {
             height: auto;
-            margin: 1 0;
+            border: double $accent;
+            background: $surface;
+            padding: 1 3;
+            margin-bottom: 1;
+            color: $text;
+            width: 100%;
         }
-        #api-input {
-            width: 1fr;
-            margin: 1 0;
-        }
-        #model-list {
+
+        /* Dashboard Grid Layout */
+        #dashboard-grid {
             height: 1fr;
-            border: solid $accent;
+            layout: grid;
+            grid-size: 2;
+            grid-columns: 1fr 1fr;
+            grid-gutter: 2;
         }
-        .panel-title {
+
+        #overview-panel, #patches-panel {
+            border: tall $accent;
+            background: $surface;
+            padding: 1 2;
+            height: 1fr;
+        }
+
+        .panel-header {
             text-style: bold;
             margin-bottom: 1;
+            color: $accent;
         }
-        #status-line {
+
+        .panel-desc {
+            margin-bottom: 1;
+            color: $text-muted;
+            height: auto;
+        }
+
+        /* API Panel */
+        #api-panel {
+            border: tall $accent;
+            background: $surface;
+            padding: 2 4;
+            max-width: 80;
+            height: auto;
+            align: center middle;
+            margin: 2 4;
+        }
+
+        #api-input {
+            margin: 1 0;
+        }
+
+        #api-buttons {
+            height: auto;
+            align: center middle;
             margin-top: 1;
-            color: $success;
+            width: 100%;
+        }
+
+        #api-buttons Button {
+            margin: 0 2;
+        }
+
+        #api-status {
+            margin-top: 1;
+            text-align: center;
+            height: auto;
+        }
+
+        /* Model Panel */
+        #model-panel {
+            border: tall $accent;
+            background: $surface;
+            padding: 1 2;
+            height: 1fr;
+        }
+
+        #model-list {
+            border: solid $accent-darken-1;
+            background: $background;
+            margin-top: 1;
+            height: 1fr;
+        }
+
+        #model-list ListItem {
+            padding: 1 2;
+        }
+
+        #model-list ListItem:hover {
+            background: $accent-muted;
+        }
+
+        #model-list ListItem.--focus {
+            background: $accent;
+            color: $text;
+            text-style: bold;
+        }
+
+        #model-status {
+            margin-top: 1;
+            text-style: bold;
+            height: auto;
+        }
+
+        /* Daemon Panel */
+        #daemon-panel {
+            border: tall $accent;
+            background: $surface;
+            padding: 1 2;
+            height: 1fr;
+        }
+
+        #daemon-controls {
+            height: auto;
+            align: left middle;
+            margin: 1 0;
+            background: $background;
+            padding: 1 2;
+            border: solid $accent-muted;
+            width: 100%;
+        }
+
+        #daemon-controls Button {
+            margin-right: 2;
+        }
+
+        #mock-switch-container {
+            width: auto;
+            align: left middle;
+            height: auto;
+        }
+
+        #mock-label {
+            margin-left: 1;
+            text-style: bold;
+            height: auto;
+        }
+
+        #daemon-status {
+            margin: 1 0;
+            text-style: bold;
+            height: auto;
+        }
+
+        #daemon-log {
+            height: 1fr;
+            border: solid $accent-darken-1;
+            background: $background;
         }
         """
 
@@ -251,38 +408,56 @@ def run_tui(workspace: Path, config_path: Path) -> None:
 
         def compose(self) -> ComposeResult:
             yield Header()
-            with Horizontal(id="nav"):
-                yield Button("Dashboard", id="nav-dashboard", variant="primary")
-                yield Button("API Key", id="nav-api")
-                yield Button("Model", id="nav-model")
-                yield Button("Daemon", id="nav-daemon")
-            with Vertical(id="content"):
-                yield Static("", id="dashboard-view")
-                with Vertical(id="api-view"):
-                    yield Static("Set or update your OpenAI API key (stored encrypted).", classes="panel-title")
-                    yield Input(placeholder="sk-...", password=True, id="api-input")
-                    with Horizontal():
-                        yield Button("Save key", id="save-api", variant="success")
-                        yield Button("Clear stored key", id="clear-api", variant="error")
-                    yield Static("", id="api-status")
-                with Vertical(id="model-view"):
-                    yield Static("Select the OpenAI model used by the Critic agent.", classes="panel-title")
-                    yield ListView(id="model-list")
-                    yield Static("", id="model-status")
-                with Vertical(id="daemon-view"):
-                    yield Static("Run the GenomeGuard watcher daemon from here.", classes="panel-title")
-                    with Horizontal(id="daemon-controls"):
-                        yield Button("Start daemon", id="start-daemon", variant="success")
-                        yield Button("Stop daemon", id="stop-daemon", variant="error", disabled=True)
-                        yield Switch(value=not has_openai_api_key(), id="mock-critic-switch")
-                        yield Label(" Mock critic")
-                    yield Static("", id="daemon-status")
-                    yield RichLog(id="daemon-log", highlight=True, markup=True)
+            with TabbedContent(id="tabs"):
+                with TabPane("Dashboard", id="dashboard"):
+                    yield Static(GENOMEGUARD_ASCII_BANNER, id="dashboard-banner")
+                    with Horizontal(id="dashboard-grid"):
+                        with VerticalScroll(id="overview-panel"):
+                            yield Static("", id="overview-content")
+                        with VerticalScroll(id="patches-panel"):
+                            yield Static("", id="patches-content")
+                with TabPane("API Key", id="api"):
+                    with Vertical(id="api-panel"):
+                        yield Static("[bold cyan]OPENAI CREDENTIALS[/]", classes="panel-header")
+                        yield Static(
+                            "Configure your OpenAI API key. The key is encrypted using machine-local "
+                            "credentials and saved in the package source tree. It is never committed to git.",
+                            classes="panel-desc"
+                        )
+                        yield Input(placeholder="sk-...", password=True, id="api-input")
+                        with Horizontal(id="api-buttons"):
+                            yield Button("Save Key", id="save-api", variant="success")
+                            yield Button("Clear Key", id="clear-api", variant="error")
+                        yield Static("", id="api-status")
+                with TabPane("Model", id="model"):
+                    with Vertical(id="model-panel"):
+                        yield Static("[bold cyan]CRITIC MODEL SELECTION[/]", classes="panel-header")
+                        yield Static(
+                            "Select which OpenAI model the Critic agent should use to analyze code changes "
+                            "and detect architectural decay.",
+                            classes="panel-desc"
+                        )
+                        yield Static("", id="model-status")
+                        yield ListView(id="model-list")
+                with TabPane("Daemon", id="daemon"):
+                    with Vertical(id="daemon-panel"):
+                        yield Static("[bold cyan]DAEMON CONTROL CENTER[/]", classes="panel-header")
+                        yield Static(
+                            "The GenomeGuard daemon polls the CodeGenome watcher database in real-time. "
+                            "When a file is modified, it runs the Sensor → Critic → Verifier → Surgeon pipeline.",
+                            classes="panel-desc"
+                        )
+                        with Horizontal(id="daemon-controls"):
+                            yield Button("Start Daemon", id="start-daemon", variant="success")
+                            yield Button("Stop Daemon", id="stop-daemon", variant="error", disabled=True)
+                            with Horizontal(id="mock-switch-container"):
+                                yield Switch(value=not has_openai_api_key(), id="mock-critic-switch")
+                                yield Label("Mock Critic Mode", id="mock-label")
+                        yield Static("", id="daemon-status")
+                        yield RichLog(id="daemon-log", highlight=True, markup=True)
             yield Footer()
 
         def on_mount(self) -> None:
-            self._show_dashboard()
-            self._refresh_model_list()
             self._update_daemon_controls()
 
         @property
@@ -292,24 +467,22 @@ def run_tui(workspace: Path, config_path: Path) -> None:
         def _reload_config(self) -> None:
             self._config = load_config(str(config_path))
 
-        def _show_view(self, view: str) -> None:
-            self._active_view = view
-            for widget_id, visible in (
-                ("dashboard-view", view == "dashboard"),
-                ("api-view", view == "api"),
-                ("model-view", view == "model"),
-                ("daemon-view", view == "daemon"),
-            ):
-                widget = self.query_one(f"#{widget_id}")
-                widget.display = visible
-            for button_id, active in (
-                ("nav-dashboard", view == "dashboard"),
-                ("nav-api", view == "api"),
-                ("nav-model", view == "model"),
-                ("nav-daemon", view == "daemon"),
-            ):
-                button = self.query_one(f"#{button_id}", Button)
-                button.variant = "primary" if active else "default"
+        @on(TabbedContent.TabActivated)
+        async def on_tab_activated(self, event: TabbedContent.TabActivated) -> None:
+            active_id = event.tabbed_content.active
+            self._active_view = active_id
+            if active_id == "dashboard":
+                self._show_dashboard()
+            elif active_id == "api":
+                status = self.query_one("#api-status", Static)
+                if has_stored_openai_api_key() or has_openai_api_key():
+                    status.update("[dim]A key is already configured. Enter a new value to replace it.[/]")
+                else:
+                    status.update("[dim]No key saved yet.[/]")
+            elif active_id == "model":
+                await self.on_nav_model()
+            elif active_id == "daemon":
+                self._update_daemon_controls()
 
         def _append_daemon_log(self, line: str) -> None:
             log_widget = self.query_one("#daemon-log", RichLog)
@@ -382,39 +555,17 @@ def run_tui(workspace: Path, config_path: Path) -> None:
                 daemon_running=self._daemon_running,
             )
             patches = build_patches_text(workspace, self._config)
-            dashboard = self.query_one("#dashboard-view", Static)
-            dashboard.update(
-                f"[bold underline]General[/]\n\n{overview}\n\n"
-                f"[bold underline]Patches[/]\n\n{patches}"
-            )
-            self._show_view("dashboard")
+            self.query_one("#overview-content", Static).update(overview)
+            self.query_one("#patches-content", Static).update(patches)
 
-        def _refresh_model_list(self) -> None:
+        async def _refresh_model_list(self) -> None:
             model_list = self.query_one("#model-list", ListView)
-            model_list.clear()
+            await model_list.clear()
             current = self._config.get("openai_model", "gpt-4o")
             models = _fetch_openai_models() if has_openai_api_key() else list(DEFAULT_OPENAI_MODELS)
             for model_id in models:
                 prefix = "● " if model_id == current else "  "
-                model_list.append(ListItem(Label(f"{prefix}{model_id}"), id=f"model-{model_id}"))
-
-        @on(Button.Pressed, "#nav-dashboard")
-        def on_nav_dashboard(self) -> None:
-            self._show_dashboard()
-
-        @on(Button.Pressed, "#nav-api")
-        def on_nav_api(self) -> None:
-            status = self.query_one("#api-status", Static)
-            if has_stored_openai_api_key() or has_openai_api_key():
-                status.update("[dim]A key is already configured. Enter a new value to replace it.[/]")
-            else:
-                status.update("[dim]No key saved yet.[/]")
-            self._show_view("api")
-
-        @on(Button.Pressed, "#nav-daemon")
-        def on_nav_daemon(self) -> None:
-            self._update_daemon_controls()
-            self._show_view("daemon")
+                model_list.append(ListItem(Label(f"{prefix}{model_id}")))
 
         @on(Button.Pressed, "#start-daemon")
         def on_start_daemon(self) -> None:
@@ -459,8 +610,7 @@ def run_tui(workspace: Path, config_path: Path) -> None:
             self._daemon_stop.set()
             self.query_one("#stop-daemon", Button).disabled = True
 
-        @on(Button.Pressed, "#nav-model")
-        def on_nav_model(self) -> None:
+        async def on_nav_model(self) -> None:
             self._reload_config()
             status = self.query_one("#model-status", Static)
             if not has_openai_api_key():
@@ -470,8 +620,7 @@ def run_tui(workspace: Path, config_path: Path) -> None:
                 )
             else:
                 status.update(f"Current model: [bold]{self._config.get('openai_model', 'gpt-4o')}[/]")
-            self._refresh_model_list()
-            self._show_view("model")
+            await self._refresh_model_list()
 
         @on(Button.Pressed, "#save-api")
         def on_save_api(self) -> None:
@@ -498,28 +647,29 @@ def run_tui(workspace: Path, config_path: Path) -> None:
             status.update("[green]Stored API key removed.[/]")
 
         @on(ListView.Selected, "#model-list")
-        def on_model_selected(self, event: ListView.Selected) -> None:
+        async def on_model_selected(self, event: ListView.Selected) -> None:
             if not has_openai_api_key():
                 self.query_one("#model-status", Static).update(
                     "[red]Set an API key before choosing a model.[/]"
                 )
                 return
-            item_id = str(event.item.id or "")
-            if not item_id.startswith("model-"):
+            label = event.item.query_one(Label)
+            content = getattr(label, "renderable", getattr(label, "content", ""))
+            model_id = str(content).strip().lstrip("●").strip()
+            if not model_id:
                 return
-            model_id = item_id.removeprefix("model-")
             save_config(str(config_path), {"openai_model": model_id})
             self._reload_config()
             self.query_one("#model-status", Static).update(
                 f"[green]Model set to [bold]{model_id}[/][/]"
             )
-            self._refresh_model_list()
+            await self._refresh_model_list()
 
-        def action_refresh(self) -> None:
+        async def action_refresh(self) -> None:
             if self._active_view == "dashboard":
                 self._show_dashboard()
             elif self._active_view == "model":
-                self.on_nav_model()
+                await self.on_nav_model()
             elif self._active_view == "daemon":
                 self._update_daemon_controls()
 
