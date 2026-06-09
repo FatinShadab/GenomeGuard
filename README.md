@@ -1,10 +1,16 @@
+<p align="center">
+  <img src="https://raw.githubusercontent.com/FatinShadab/GenomeGuard/main/docs/media/GenomeGuard.png" alt="GenomeGuard TUI dashboard" width="920" />
+</p>
+
 # GenomeGuard
 
 **AI-native architecture immune system for Python codebases.** GenomeGuard watches a live `codegenome` graph, asks OpenAI to reason over architectural decay, verifies the proposed repair, and produces a safe patch or enforced rewrite before the design damage spreads.
 
-**Author:** Md. Fatin Shadab Turja
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-![GenomeGuard CLI screenshot](docs/media/cli-help.png)
+**Author:** [Md. Fatin Shadab Turja](https://github.com/FatinShadab)
+
+<!-- PyPI renders README images only from absolute HTTPS URLs (not repo-relative paths). -->
 
 ## The Problem
 
@@ -69,7 +75,7 @@ flowchart LR
 | **Configurable model selection** | Lets users trade cost, latency, and reasoning quality without changing code. | `guard_config.json`, CLI runtime loading, and the Textual TUI model list in `src/genomeguard/tui.py`. |
 | **Offline mock mode** | Enables development and CI without network calls or API cost. | `--mock-critic` uses fixtures in `tests/fixtures/`; live mode is enabled with `--no-mock-critic` and `OPENAI_API_KEY`. |
 
-![Critic Agent structured JSON screenshot](docs/media/critic-json.png)
+![Critic Agent structured JSON screenshot](https://raw.githubusercontent.com/FatinShadab/GenomeGuard/main/docs/media/critic-json.png)
 
 ## Key Features
 
@@ -220,13 +226,20 @@ genome-guard --workspace . tui
 
 ## Demo and Media
 
-The repository includes generated screenshots from local GenomeGuard commands:
+Screenshots from local GenomeGuard commands (hosted on GitHub for PyPI rendering):
 
-![Offline verification screenshot](docs/media/pytest-results.png)
+![GenomeGuard TUI dashboard](https://raw.githubusercontent.com/FatinShadab/GenomeGuard/main/docs/media/GenomeGuard.png)
 
-- CLI surface: `docs/media/cli-help.png`
-- Critic JSON contract: `docs/media/critic-json.png`
-- Offline verification: `docs/media/pytest-results.png`
+![GenomeGuard CLI help](https://raw.githubusercontent.com/FatinShadab/GenomeGuard/main/docs/media/cli-help.png)
+
+![Critic Agent structured JSON](https://raw.githubusercontent.com/FatinShadab/GenomeGuard/main/docs/media/critic-json.png)
+
+![Offline verification screenshot](https://raw.githubusercontent.com/FatinShadab/GenomeGuard/main/docs/media/pytest-results.png)
+
+- TUI dashboard: [GenomeGuard.png](https://raw.githubusercontent.com/FatinShadab/GenomeGuard/main/docs/media/GenomeGuard.png)
+- CLI surface: [cli-help.png](https://raw.githubusercontent.com/FatinShadab/GenomeGuard/main/docs/media/cli-help.png)
+- Critic JSON contract: [critic-json.png](https://raw.githubusercontent.com/FatinShadab/GenomeGuard/main/docs/media/critic-json.png)
+- Offline verification: [pytest-results.png](https://raw.githubusercontent.com/FatinShadab/GenomeGuard/main/docs/media/pytest-results.png)
 
 Suggested live demo flow:
 
@@ -266,4 +279,18 @@ Local runtime artifacts (`.genome/`, `.genomeguard/`, encrypted credentials, pat
 
 ## License
 
-MIT. See `LICENSE`. Copyright (c) 2026 Md. Fatin Shadab Turja.
+This project is licensed under the **MIT License** — see the [LICENSE](https://github.com/FatinShadab/GenomeGuard/blob/main/LICENSE) file for the full text.
+
+```text
+Copyright (c) 2026 Md. Fatin Shadab Turja
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+```

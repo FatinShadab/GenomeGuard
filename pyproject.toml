@@ -48,6 +48,11 @@ dev = [
 [project.scripts]
 genome-guard = "genomeguard.cli:main"
 
+[project.urls]
+Homepage = "https://github.com/FatinShadab/GenomeGuard"
+Repository = "https://github.com/FatinShadab/GenomeGuard"
+Issues = "https://github.com/FatinShadab/GenomeGuard/issues"
+
 [tool.hatch.build.targets.wheel]
 packages = ["src/genomeguard"]
 
