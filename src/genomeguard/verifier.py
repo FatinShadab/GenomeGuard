@@ -23,7 +23,7 @@ def verify_and_apply(
         return {"status": "healthy"}
 
     refactored_code = critic_result["refactored_code"]
-    temp_filename = config.get("temp_file", "temp_genome_check.py")
+    temp_filename = config.get("temp_file", ".temp_genome_check.py")
 
     passed, error_message = execute_compilation_check(
         refactored_code, temp_filename, workspace_root
@@ -41,7 +41,7 @@ def run_verifier_smoke_test(workspace: str | None = None) -> None:
 
     root = Path(workspace or ".").resolve()
     config = load_config(str(root / "guard_config.json"))
-    temp_file = config.get("temp_file", "temp_genome_check.py")
+    temp_file = config.get("temp_file", ".temp_genome_check.py")
 
     valid_ok, valid_err = execute_compilation_check("x = 1\n", temp_file, root)
     print(f"valid sample: ok={valid_ok} error={valid_err!r}")

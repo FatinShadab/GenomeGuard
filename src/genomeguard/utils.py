@@ -36,7 +36,7 @@ DEFAULT_CONFIG: dict[str, Any] = {
     "mode": "patch",
     "rules": [],
     "patches_dir": ".genome/patches",
-    "temp_file": "temp_genome_check.py",
+    "temp_file": ".temp_genome_check.py",
     "openai_model": "gpt-4o",
 }
 
@@ -59,7 +59,7 @@ def load_config(path: str = "guard_config.json") -> dict:
     config["mode"] = config.get("mode", "patch")
     config["rules"] = config.get("rules", [])
     config["patches_dir"] = config.get("patches_dir", ".genome/patches")
-    config["temp_file"] = config.get("temp_file", "temp_genome_check.py")
+    config["temp_file"] = config.get("temp_file", ".temp_genome_check.py")
     config["openai_model"] = config.get("openai_model", "gpt-4o")
     return config
 

@@ -8,6 +8,6 @@
     "No function with cyclomatic complexity above 10"
   ],
   "patches_dir": ".genome/patches",
-  "temp_file": "temp_genome_check.py",
+  "temp_file": ".temp_genome_check.py",
   "openai_model": "gpt-4o"
 }

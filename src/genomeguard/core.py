@@ -62,7 +62,7 @@ def _advance_last_seen_mtime(
     """Bump ``last_seen_mtime`` after processing to avoid self-induced poll loops."""
     last_seen = float(delta["db_mtime"])
 
-    if outcome.get("status") == "applied":
+    if outcome.get("status") in ("applied", "rejected"):
         file_path = Path(changed_path)
         if file_path.is_file():
             file_mtime = file_path.stat().st_mtime
