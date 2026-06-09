@@ -1,0 +1,7 @@
+{
+    "mcpServers": {
+      "code-genome": {
+        "url": "http://localhost:7331/mcp"
+      }
+    }
+  }

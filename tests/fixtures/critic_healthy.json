@@ -1,0 +1,5 @@
+{
+  "decay_detected": false,
+  "reason": "No architectural violations detected against the configured rules.",
+  "refactored_code": ""
+}

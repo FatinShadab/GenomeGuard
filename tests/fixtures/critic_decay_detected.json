@@ -1,0 +1,5 @@
+{
+  "decay_detected": true,
+  "reason": "Route handler directly imports and calls the database layer (query_users), violating separation of concerns between UI/controller and infrastructure.",
+  "refactored_code": "# Refactored: DB access delegated to a service layer\nfrom services.user_service import list_users\n\n\ndef handle_request(request):\n    users = list_users()\n    return {\"users\": users}\n"
+}
