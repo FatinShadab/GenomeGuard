@@ -19,15 +19,30 @@ from genomeguard.critic import (
     run_critic_smoke_test,
 )
 from genomeguard.graph import compact_graph_context, export_graph_context
+from genomeguard.surgeon import (
+    apply_enforce_write,
+    generate_unified_diff,
+    run_surgeon,
+    run_surgeon_smoke_test,
+    write_patch_file,
+)
 from genomeguard.utils import load_config, read_changed_file, resolve_genome_db
+from genomeguard.verifier import (
+    execute_compilation_check,
+    run_verifier_smoke_test,
+    verify_and_apply,
+)
 from genomeguard.watcher import query_graph_delta
 
 __all__ = [
     "MOCK_CRITIC_FIXTURE",
+    "apply_enforce_write",
     "build_critic_prompt",
     "compact_graph_context",
     "evaluate_decay_metrics",
+    "execute_compilation_check",
     "export_graph_context",
+    "generate_unified_diff",
     "load_config",
     "main",
     "parse_critic_response",
@@ -36,6 +51,11 @@ __all__ = [
     "resolve_genome_db",
     "run_critic_smoke_test",
     "run_sensor_smoke_test",
+    "run_surgeon",
+    "run_surgeon_smoke_test",
+    "run_verifier_smoke_test",
+    "verify_and_apply",
+    "write_patch_file",
 ]
 
 if __name__ == "__main__":
@@ -43,6 +63,12 @@ if __name__ == "__main__":
 
     if len(sys.argv) > 1 and sys.argv[1] == "sensor":
         main()
+    elif len(sys.argv) > 1 and sys.argv[1] == "surgeon":
+        workspace = sys.argv[2] if len(sys.argv) > 2 else None
+        run_surgeon_smoke_test(workspace)
+    elif len(sys.argv) > 1 and sys.argv[1] == "verifier":
+        workspace = sys.argv[2] if len(sys.argv) > 2 else None
+        run_verifier_smoke_test(workspace)
     else:
         path = sys.argv[1] if len(sys.argv) > 1 else None
         run_critic_smoke_test(path)
